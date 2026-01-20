@@ -1,0 +1,188 @@
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/WhoGodsyoure/Home/refs/heads/main/%E4%BA%BA%E7%94%9F%E3%81%AE%E6%84%8F%E5%91%B3%E3%81%A8%E3%81%AF%E4%BD%95%E3%81%8B"))() 
+local FlagsManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/WhoGodsyoure/Home/refs/heads/main/Configure"))()
+
+local main = lib:Load({
+      Title = 'ArchiveXNova',
+      ToggleButton = "rbxassetid://85025739024001",
+	  BindGui = Enum.KeyCode.RightControl,
+  })
+
+local Main = main:AddTab("Win")
+main:SelectTab()
+
+local MainSection = Main:AddSection({Title = "+1 Jump Pogo Escape UPD", Description = "Description", Defualt = false , Locked = false})
+local GroupButtons =   MainSection:AddGroupButton()
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local Points = {
+    CFrame.new(-24.093, 1987.696, -26.477),
+    CFrame.new(-23.207, 1986.196, -24.097),
+    CFrame.new(-23.014, 1985.688, -22.559),
+}
+
+local running = false
+local currentTask
+
+local function HRP()
+    local c = Player.Character or Player.CharacterAdded:Wait()
+    return c:WaitForChild("HumanoidRootPart")
+end
+
+local function stopAll()
+    running = false
+    if currentTask then
+        task.cancel(currentTask)
+        currentTask = nil
+    end
+end
+
+local function teleportOnce(delay)
+    stopAll()
+    for _, cf in ipairs(Points) do
+        HRP().CFrame = cf
+        if delay > 0 then
+            task.wait(delay)
+        end
+    end
+end
+
+local function startLoop(delay, duration)
+    stopAll()
+    running = true
+
+    currentTask = task.spawn(function()
+        local startTime = os.clock()
+        while running do
+            for _, cf in ipairs(Points) do
+                if not running then break end
+                HRP().CFrame = cf
+                if delay > 0 then
+                    task.wait(delay)
+                end
+            end
+            if duration and os.clock() - startTime >= duration then
+                break
+            end
+        end
+        running = false
+    end)
+end
+
+local Modes = {
+    ["One-Time | Normal"] = function() teleportOnce(0.5) end,
+    ["One-Time | Fast"] = function() teleportOnce(0.25) end,
+    ["One-Time | Super Fast"] = function() teleportOnce(0) end,
+
+    ["Loop | Normal Loop"] = function() startLoop(0.6) end,
+    ["Loop | Fast Loop"] = function() startLoop(0.25) end,
+    ["Loop | Safe Loop"] = function() startLoop(1.2) end,
+    ["Loop | Stop Loop"] = function() stopAll() end,
+
+    ["Time | Run for 30 seconds"] = function() startLoop(0.4, 30) end,
+    ["Time | Run for 1 minute"] = function() startLoop(0.4, 60) end,
+
+    ["Stability | Safe Mode"] = function() startLoop(1.5) end,
+
+    ["Performance | Light Mode"] = function() startLoop(0) end,
+    ["Performance | Normal Mode"] = function() startLoop(0.35) end,
+
+    ["AFK | AFK Mode"] = function() startLoop(0) end,
+
+    ["System | Stop All"] = function() stopAll() end,
+}
+
+local Options = {
+    "One-Time | Normal",
+    "One-Time | Fast",
+    "One-Time | Super Fast",
+
+    "Loop | Normal Loop",
+    "Loop | Fast Loop",
+    "Loop | Safe Loop",
+    "Loop | Stop Loop",
+
+    "Time | Run for 30 seconds",
+    "Time | Run for 1 minute",
+
+    "Stability | Safe Mode",
+
+    "Performance | Light Mode",
+    "Performance | Normal Mode",
+
+    "AFK | AFK Mode",
+
+    "System | Stop All",
+}
+
+MainSection:AddDropdown("TeleportMode", {
+    Title = "Teleport Mode",
+    Description = "",
+    Options = Options,
+    Default = "",
+    PlaceHolder = "Select Mode",
+    Multiple = false,
+    Callback = function(choice)
+        local f = Modes[choice]
+        if f then
+            f()
+        end
+    end
+})
+
+local Main = main:AddTab("Rebirth")
+main:SelectTab()
+
+local MainSection = Main:AddSection({Title = "+1 Jump Pogo Escape UPD", Description = "Description", Defualt = false , Locked = false})
+local GroupButtons =   MainSection:AddGroupButton()
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Event = ReplicatedStorage.Remotes.Rebirth
+local LoopConnection
+
+local function stopLoop()
+    if LoopConnection then
+        LoopConnection:Disconnect()
+        LoopConnection = nil
+    end
+end
+
+local Modes = {
+    ["Normal (Once)"] = function()
+        stopLoop()
+        firesignal(Event.OnClientEvent)
+    end,
+
+    ["Loop"] = function()
+        stopLoop()
+        LoopConnection = RunService.Heartbeat:Connect(function()
+            firesignal(Event.OnClientEvent)
+        end)
+    end,
+
+    ["Stop Loop"] = function()
+        stopLoop()
+    end,
+}
+
+MainSection:AddDropdown("EpicDropDownName", {
+    Title = "Rebirth Mode",
+    Description = "",
+    Options = {
+        "Normal (Once)",
+        "Loop",
+        "Stop Loop",
+    },
+    Default = "",
+    PlaceHolder = "Select Mode",
+    Multiple = false,
+    Callback = function(choice)
+        local action = Modes[choice]
+        if action then
+            action()
+        end
+    end
+})
